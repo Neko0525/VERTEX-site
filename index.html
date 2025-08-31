@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VERTEX Habit Tracker</title>
+  <style>
+    :root{
+      --bg:#0f0f10;
+      --panel:#171719;
+      --panel-2:#101113;
+      --text:#e8e8ea;
+      --muted:#a7a7ad;
+      --border:#242429;
+      --accent:#00ffe7;
+      --gold:#ffd36b;
+      --green-0:#2b2e31;
+      --green-1:#1b4024;
+      --green-2:#216d35;
+      --green-3:#3aa555;
+      --green-4:#72d676;
+      --radius:14px;
+      --shadow:0 2px 0 rgba(255,255,255,0.02) inset, 0 12px 30px rgba(0,0,0,0.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font:14px/1.45 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    /* Header */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      background:linear-gradient(180deg,#0f0f10 0%,rgba(15,15,16,0.85) 100%);
+      border-bottom:1px solid var(--border);
+      padding:16px 20px;
+    }
+    .brand{
+      max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:12px;
+      font-weight:800; letter-spacing:.5px; font-size:18px;
+    }
+    .logo{
+      width:28px; height:28px; position:relative; flex:0 0 28px;
+      filter:drop-shadow(0 4px 12px rgba(255,211,107,.35)) drop-shadow(0 0 8px rgba(0,255,231,.35));
+    }
+    .logo::before,.logo::after{
+      content:""; position:absolute; top:0; width:9px; height:28px; border-radius:2px;
+      background:linear-gradient(180deg,var(--accent),#b700ff,var(--gold));
+    }
+    .logo::before{ left:5px; transform:skew(-14deg); }
+    .logo::after{ right:5px; transform:skew(14deg); }
+    .brand-name{
+      background:linear-gradient(90deg,var(--accent),#b700ff,var(--gold));
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .brand-muted{ color:var(--muted); font-weight:600; margin-left:6px }
+
+    /* Container */
+    .wrap{max-width:1200px; margin:18px auto; padding:0 20px}
+    .grid{display:grid; gap:16px}
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    /* Buttons */
+    .btn-add{
+      display:inline-block; margin:20px 0; padding:12px 18px;
+      font-weight:700; border-radius:12px; border:none; cursor:pointer;
+      background:var(--accent); color:#000; font-size:15px;
+      box-shadow:0 0 14px var(--accent);
+      transition:all .2s ease;
+    }
+    .btn-add:hover{ background:var(--gold); box-shadow:0 0 18px var(--gold) }
+
+    .habit-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px }
+    .habit-title{ font-size:18px; font-weight:800; outline:none }
+    .habit-actions button{
+      background:none; border:none; cursor:pointer; color:var(--muted); font-size:14px; margin-left:8px;
+    }
+    .habit-actions button:hover{ color:var(--accent) }
+
+    /* Heatmap */
+    .heatmap{display:grid; grid-template-columns:repeat(52,14px); gap:4px; padding:12px; border-radius:12px;
+      background:var(--panel-2); border:1px solid var(--border)}
+    .cell{width:14px;height:14px;border-radius:3px;background:var(--green-0);
+      box-shadow:0 0 0 1px rgba(255,255,255,0.02) inset;cursor:pointer}
+    .c1{background:var(--green-1)} .c2{background:var(--green-2)} .c3{background:var(--green-3)} .c4{background:var(--green-4)}
+    .cell:active{transform:scale(.9)}
+
+    /* Donut */
+    .donut{width:120px;height:120px;border-radius:50%;
+      background:conic-gradient(var(--gold) var(--p,0%), #2a2a2e 0);
+      display:grid;place-items:center;border:8px solid #121215;
+      box-shadow:0 0 0 1px var(--border) inset, 0 10px 28px rgba(0,0,0,.35);}
+    .donut > div{font-weight:800;font-size:18px}
+
+    /* Feed */
+    .item{background:#141416;border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-top:8px;
+      display:flex;justify-content:space-between;align-items:center}
+    .item-title{font-weight:700}
+    .item-meta{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:100;display:none}
+    .modal-card{background:var(--panel);padding:20px;border-radius:var(--radius);border:1px solid var(--border);width:300px}
+    .modal-card h3{margin-top:0}
+    .modal-card input{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0f0f10;color:var(--text);margin-bottom:12px}
+    .modal-card button{padding:10px 16px;border-radius:10px;border:none;font-weight:700;cursor:pointer;margin-right:8px}
+    .btn-primary{background:var(--accent);color:#000}
+    .btn-cancel{background:#222;color:var(--text)}
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div class="brand-name">VERTEX</div>
+      <div class="brand-muted">Habit Tracker</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <button class="btn-add" id="addHabitBtn">+ Add Habit</button>
+    <div id="habits"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="habitModal">
+    <div class="modal-card">
+      <h3>New Habit</h3>
+      <input type="text" id="habitName" placeholder="Habit name...">
+      <div>
+        <button class="btn-primary" id="saveHabit">Add</button>
+        <button class="btn-cancel" id="cancelHabit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "vertex.habits.v1";
+    let habits = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+    const habitsDiv = document.getElementById("habits");
+    const modal = document.getElementById("habitModal");
+    const habitNameInput = document.getElementById("habitName");
+
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+    }
+
+    function renderHabits(){
+      habitsDiv.innerHTML = "";
+      habits.forEach((habit, i)=>{
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="habit-header">
+            <div class="habit-title" contenteditable="true" data-index="${i}">${habit.name}</div>
+            <div class="habit-actions">
+              <button onclick="deleteHabit(${i})">🗑</button>
+            </div>
+          </div>
+          <div class="donut" style="--p:${habit.percent||0}%"><div>${habit.percent||0}%</div></div>
+          <div class="heatmap">${habit.days.map((lvl,d)=>`<div class="cell ${lvl?`c${lvl}`:""}" onclick="toggleDay(${i},${d})"></div>`).join("")}</div>
+          <div id="feed-${i}">${habit.feed.map(f=>`<div class="item"><div class="item-title">${f.text}</div><div class="item-meta">${f.when}</div></div>`).join("")}</div>
+        `;
+        habitsDiv.appendChild(card);
+      });
+
+      // title update handler
+      document.querySelectorAll(".habit-title").forEach(el=>{
+        el.addEventListener("blur", e=>{
+          const idx = e.target.dataset.index;
+          habits[idx].name = e.target.innerText.trim() || "Untitled Habit";
+          saveState();
+        });
+      });
+    }
+
+    function deleteHabit(i){
+      if(confirm("Delete this habit?")){
+        habits.splice(i,1);
+        saveState();
+        renderHabits();
+      }
+    }
+
+    function toggleDay(habitIndex, dayIndex){
+      let h = habits[habitIndex];
+      h.days[dayIndex] = ((h.days[dayIndex] || 0) + 1) % 5;
+      h.feed.unshift({text:`Day ${dayIndex+1} → Level ${h.days[dayIndex]}`,when:"just now"});
+      if(h.feed.length>6) h.feed.pop();
+      let completed = h.days.filter(v=>v>0).length;
+      h.percent = Math.round((completed/h.days.length)*100);
+      saveState();
+      renderHabits();
+    }
+
+    // Add Habit modal
+    document.getElementById("addHabitBtn").onclick = ()=>{modal.style.display="flex"; habitNameInput.value=""; habitNameInput.focus();}
+    document.getElementById("cancelHabit").onclick = ()=>{modal.style.display="none";}
+    document.getElementById("saveHabit").onclick = ()=>{
+      const name = habitNameInput.value.trim();
+      if(!name) return;
+      habits.push({name, days:Array(365).fill(0), percent:0, feed:[]});
+      saveState();
+      modal.style.display="none";
+      renderHabits();
+    }
+    modal.onclick = (e)=>{ if(e.target===modal) modal.style.display="none"; }
+
+    // Init
+    renderHabits();
+  </script>
+</body>
+</html>
